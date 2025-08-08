@@ -62,7 +62,7 @@ struct hash {
     void *aux;            /* Auxiliary data for `hash' and `less'. */
 };
 
-/* A hash table iterator. */
+//해시 테이블을 순회하는 도구
 struct hash_iterator {
     struct hash *hash;      /* The hash table. */
     struct list *bucket;    /* Current bucket. */

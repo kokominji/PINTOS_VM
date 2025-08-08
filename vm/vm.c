@@ -57,7 +57,8 @@ err:
     return false;
 }
 
-/* Find VA from spt and return page. On error, return NULL. */
+//주어진 보조 페이지 테이블에서 va에 해당하는 struct page를 찾아 반환한다.
+//찾지 못하면 NULL을 반환한다.
 struct page *spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED) {
     struct page *page = NULL;
     /* TODO: Fill this function. */
@@ -65,7 +66,9 @@ struct page *spt_find_page(struct supplemental_page_table *spt UNUSED, void *va 
     return page;
 }
 
-/* Insert PAGE into spt with validation. */
+//struct page를 주어진 SPT에 삽입한다.
+//단, 해당 page의 가상 주소(page->va)가 SPT에 이미 존재하지 않아야 하며,
+//존재할 경우 삽입하지 않고 false를 반환해야 한다.
 bool spt_insert_page(struct supplemental_page_table *spt UNUSED, struct page *page UNUSED) {
     int succ = false;
     /* TODO: Fill this function. */
@@ -153,8 +156,21 @@ static bool vm_do_claim_page(struct page *page) {
     return swap_in(page, frame->kva);
 }
 
+//보조 페이지 테이블을 초기화
 /* Initialize new supplemental page table */
-void supplemental_page_table_init(struct supplemental_page_table *spt UNUSED) {}
+void supplemental_page_table_init(struct supplemental_page_table *spt UNUSED) {
+    hash_init(spt, page_hash, page_less, NULL);
+}
+
+// 페이지(가상 주소)에 대한 해시 값을 계산
+uint64_t page_hash (const struct hash_elem *e, void *aux) {
+
+}
+
+// 두 페이지(가상 주소)를 비교해서 정렬 순서를 결정
+bool page_less (const struct hash_elem *a, const struct hash_elem *b, void *aux) {
+
+}
 
 /* Copy supplemental page table from src to dst */
 bool supplemental_page_table_copy(struct supplemental_page_table *dst UNUSED,

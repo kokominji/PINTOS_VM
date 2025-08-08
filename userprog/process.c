@@ -852,25 +852,24 @@ static uint64_t *pop_stack(size_t size, struct intr_frame *if_) {
  * upper block. */
 
 static bool lazy_load_segment(struct page *page, void *aux) {
-    /* TODO: Load the segment from the file */
-    /* TODO: This called when the first page fault occurs on address VA. */
-    /* TODO: VA is available when calling this function. */
+    /* TODO: 파일에서 세그먼트를 로드해야 한다. */
+    /* TODO: 이 함수는 VA(가상 주소)에서 첫 번째 페이지 폴트가 발생했을 때 호출된다. */
+    /* TODO: VA는 이 함수를 호출할 시점에 유효한 주소이다. */
 }
 
-/* Loads a segment starting at offset OFS in FILE at address
- * UPAGE.  In total, READ_BYTES + ZERO_BYTES bytes of virtual
- * memory are initialized, as follows:
+/* 파일(FILE)의 OFS(offset) 위치부터 시작하여 세그먼트를 
+ * 가상 주소 UPAGE에 로드한다. 총 READ_BYTES + ZERO_BYTES 바이트의 
+ * 가상 메모리를 다음과 같이 초기화한다:
  *
- * - READ_BYTES bytes at UPAGE must be read from FILE
- * starting at offset OFS.
+ * - READ_BYTES 바이트는 FILE의 OFS 위치부터 읽어서 UPAGE에 채운다.
+ * - 그 다음 ZERO_BYTES 바이트는 0으로 채운다 (UPAGE + READ_BYTES부터).
  *
- * - ZERO_BYTES bytes at UPAGE + READ_BYTES must be zeroed.
+ * WRITABLE이 true인 경우, 초기화된 페이지는 사용자 프로세스가 
+ * 쓰기 가능해야 하며, false인 경우 읽기 전용이어야 한다.
  *
- * The pages initialized by this function must be writable by the
- * user process if WRITABLE is true, read-only otherwise.
- *
- * Return true if successful, false if a memory allocation error
- * or disk read error occurs. */
+ * 성공 시 true를 반환하고, 메모리 할당 실패나 디스크 읽기 오류가 
+ * 발생하면 false를 반환한다.
+ */
 static bool load_segment(struct file *file, off_t ofs, uint8_t *upage, uint32_t read_bytes,
                          uint32_t zero_bytes, bool writable) {
     ASSERT((read_bytes + zero_bytes) % PGSIZE == 0);
@@ -878,13 +877,13 @@ static bool load_segment(struct file *file, off_t ofs, uint8_t *upage, uint32_t 
     ASSERT(ofs % PGSIZE == 0);
 
     while (read_bytes > 0 || zero_bytes > 0) {
-        /* Do calculate how to fill this page.
-         * We will read PAGE_READ_BYTES bytes from FILE
-         * and zero the final PAGE_ZERO_BYTES bytes. */
+        /* 이 페이지를 어떻게 채울지 계산해야 한다.
+         * FILE로부터 PAGE_READ_BYTES만큼 읽고,
+         * 나머지 PAGE_ZERO_BYTES는 0으로 채운다. */
         size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
         size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
-        /* TODO: Set up aux to pass information to the lazy_load_segment. */
+        /* TODO: lazy_load_segment 함수에 정보를 전달하기 위해 aux를 설정하라. */
         void *aux = NULL;
         if (!vm_alloc_page_with_initializer(VM_ANON, upage, writable, lazy_load_segment, aux))
             return false;

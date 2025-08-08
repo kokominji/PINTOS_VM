@@ -10,21 +10,34 @@
 #include "threads/pte.h"
 #include "threads/thread.h"
 
-static uint64_t *pgdir_walk(uint64_t *pdp, const uint64_t va, int create) {
+//페이지 테이블의 구조
+
+/**
+ * pgdir_walk - 가상 주소에 대응하는 페이지 테이블 엔트리를 찾거나 생성합니다.
+ *
+ * @pdp: 페이지 디렉터리 포인터 (상위 페이지 테이블, 예: PD 혹은 PML4)
+ * @va:  가상 주소 (virtual address), 이 주소에 해당하는 엔트리를 찾습니다.
+ * @create: 만약 엔트리가 없다면 새로 생성할지 여부 (1이면 생성, 0이면 NULL 반환)
+ *
+ * 반환값: va에 해당하는 페이지 테이블 엔트리의 포인터 (성공 시),
+ *         실패하거나 생성하지 않기로 한 경우 NULL
+ */
+static uint64_t *pgdir_walk(uint64_t *pdp, const uint64_t va, int create) { 
     int idx = PDX(va);
     if (pdp) {
         uint64_t *pte = (uint64_t *)pdp[idx];
-        if (!((uint64_t)pte & PTE_P)) {
-            if (create) {
+        if (!((uint64_t)pte & PTE_P)) { //유효한 엔트리인지 확인
+            if (create) { //creat==1 이면, 이 엔트리를 새로 생성
                 uint64_t *new_page = palloc_get_page(PAL_ZERO);
                 if (new_page)
-                    pdp[idx] = vtop(new_page) | PTE_U | PTE_W | PTE_P;
+                    pdp[idx] = vtop(new_page) | PTE_U | PTE_W | PTE_P; //페이지 디렉터리에 물리주소로 저장
                 else
-                    return NULL;
+                    return NULL; //새 페이지를 만들지못하면 NULL반환
             } else
-                return NULL;
-        }
-        return (uint64_t *)ptov(PTE_ADDR(pdp[idx]) + 8 * PTX(va));
+                return NULL; 
+        } 
+        //엔트리가 존재하면
+        return (uint64_t *)ptov(PTE_ADDR(pdp[idx]) + 8 * PTX(va)); //
     }
     return NULL;
 }
