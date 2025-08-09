@@ -5,6 +5,8 @@
 #include "threads/malloc.h"
 #include "vm/inspect.h"
 
+static struct list frame_table;
+
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
 void vm_init(void) {
@@ -16,6 +18,8 @@ void vm_init(void) {
     register_inspect_intr();
     /* DO NOT MODIFY UPPER LINES. */
     /* TODO: Your code goes here. */
+
+    list_init(&frame_table);
 }
 
 /* Get the type of the page. This function is useful if you want to know the
@@ -59,24 +63,38 @@ err:
 
 //주어진 보조 페이지 테이블에서 va에 해당하는 struct page를 찾아 반환한다.
 //찾지 못하면 NULL을 반환한다.
-struct page *spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED) {
-    struct page *page = NULL;
-    /* TODO: Fill this function. */
+struct page *spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED) {  
+    struct page key;
+    key.va = pg_round_down(va); 
 
-    return page;
+    struct hash_elem *e = hash_find (&spt->spt_hash, &key.hash_elem);
+
+    if (e == NULL) {
+        return NULL; 
+    }
+    else {
+        return hash_entry (e, struct page, hash_elem);
+    }
 }
 
 //struct page를 주어진 SPT에 삽입한다.
 //단, 해당 page의 가상 주소(page->va)가 SPT에 이미 존재하지 않아야 하며,
 //존재할 경우 삽입하지 않고 false를 반환해야 한다.
 bool spt_insert_page(struct supplemental_page_table *spt UNUSED, struct page *page UNUSED) {
-    int succ = false;
-    /* TODO: Fill this function. */
+    page->va = pg_round_down(page->va);
+    struct hash_elem *old_elem = hash_insert (&spt->spt_hash, &page->hash_elem);
 
-    return succ;
+    if (old_elem != NULL){
+        return false;
+    }
+    return true;
 }
 
-void spt_remove_page(struct supplemental_page_table *spt, struct page *page) {
+void spt_remove_page(struct supplemental_page_table *spt, struct page *page) {   
+    struct hash_elem *e = hash_delete (&spt->spt_hash, &page->hash_elem);
+    if (e == NULL) {
+        return false;
+    }
     vm_dealloc_page(page);
     return true;
 }
@@ -98,16 +116,21 @@ static struct frame *vm_evict_frame(void) {
     return NULL;
 }
 
-/* palloc() and get frame. If there is no available page, evict the page
- * and return it. This always return valid address. That is, if the user pool
- * memory is full, this function evicts the frame to get the available memory
- * space.*/
+//물리 메모리 할당 -> 프레임 구조체 생성 -> 반환
 static struct frame *vm_get_frame(void) {
-    struct frame *frame = NULL;
-    /* TODO: Fill this function. */
-
+    //물리 페이지 할당
+    void *kva = palloc_get_page(PAL_USER);
+    if (kva == NULL){
+        PANIC("todo"); //swap out 구현 후 수정
+    }
+    //프레임 구조체 할당
+    struct frame *frame = malloc(sizeof(struct frame));
     ASSERT(frame != NULL);
-    ASSERT(frame->page == NULL);
+
+    //멤버 초기화
+    frame->kva = kva;
+    frame->page = NULL;
+
     return frame;
 }
 
@@ -172,7 +195,7 @@ uint64_t page_hash (const struct hash_elem *e, void *aux) {
 bool page_less (const struct hash_elem *a, const struct hash_elem *b, void *aux) {
     const struct page *pa = hash_entry (a, struct page, hash_elem);
     const struct page *pb = hash_entry (a, struct page, hash_elem);
-    
+
     return pa->va < pb->va;
 // 1) elem → page 구조체
 // 2) 같은 기준의 키(va) 비교
