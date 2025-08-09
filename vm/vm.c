@@ -164,12 +164,18 @@ void supplemental_page_table_init(struct supplemental_page_table *spt UNUSED) {
 
 // 페이지(가상 주소)에 대한 해시 값을 계산
 uint64_t page_hash (const struct hash_elem *e, void *aux) {
-
+    const struct page *p = hash_entry (e,struct page, hash_elem);
+    return hash_bytes(&p->va, sizeof p->va);
 }
 
 // 두 페이지(가상 주소)를 비교해서 정렬 순서를 결정
 bool page_less (const struct hash_elem *a, const struct hash_elem *b, void *aux) {
-
+    const struct page *pa = hash_entry (a, struct page, hash_elem);
+    const struct page *pb = hash_entry (a, struct page, hash_elem);
+    
+    return pa->va < pb->va;
+// 1) elem → page 구조체
+// 2) 같은 기준의 키(va) 비교
 }
 
 /* Copy supplemental page table from src to dst */
