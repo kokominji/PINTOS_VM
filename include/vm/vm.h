@@ -45,8 +45,9 @@ struct page {
 
 /* The representation of "frame" */
 struct frame {
-    void *kva;
-    struct page *page;
+    void *kva; //커널 가상주소
+    struct page *page; //해당 프레임과 연결된 페이지 구조체
+    struct list_elem frame_elem;
 };
 
 /* The function table for page operations.
@@ -70,7 +71,7 @@ struct page_operations {
  * We don't want to force you to obey any specific design for this struct.
  * All designs up to you for this. */
 struct supplemental_page_table {
-    struct hash stp_hash; 
+    struct hash spt_hash; 
 };
 
 #include "threads/thread.h"

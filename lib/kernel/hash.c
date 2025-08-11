@@ -114,6 +114,10 @@ struct hash_elem *hash_replace(struct hash *h, struct hash_elem *new) {
    null pointer if no equal element exists in the table. */
 struct hash_elem *hash_find(struct hash *h, struct hash_elem *e) {
     return find_elem(h, find_bucket(h, e), e);
+    // 내부에서 page_hash()로 key의 해시값을 구함
+    //해당 버킷으로 가서 page_less()로 같은 키를 가진 원소를 찾음
+    //찾으면 그 원소의 struct hash_elem* 반환
+    //못 찾으면 NULL 반환
 }
 
 /* Finds, removes, and returns an element equal to E in hash

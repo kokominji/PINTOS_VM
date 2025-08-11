@@ -166,7 +166,10 @@ bool vm_claim_page(void *va UNUSED) {
     return vm_do_claim_page(page);
 }
 
-/* Claim the PAGE and set up the mmu. */
+/*vm_get_frame()으로 물리 페이지 확보
+page와 frame 연결 (frame->page = page, page->frame = frame)
+페이지 테이블에 va → kva 매핑 추가 (pml4_set_page)
+성공 여부 반환 (true / false)*/
 static bool vm_do_claim_page(struct page *page) {
     struct frame *frame = vm_get_frame();
 
@@ -197,8 +200,8 @@ bool page_less (const struct hash_elem *a, const struct hash_elem *b, void *aux)
     const struct page *pb = hash_entry (a, struct page, hash_elem);
 
     return pa->va < pb->va;
-// 1) elem → page 구조체
-// 2) 같은 기준의 키(va) 비교
+// 1. elem → page 구조체
+// 2. 같은 기준의 키(va) 비교
 }
 
 /* Copy supplemental page table from src to dst */
