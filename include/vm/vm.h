@@ -41,6 +41,7 @@ struct page {
 #endif
     };
     struct hash_elem hash_elem;
+    bool writable;
 };
 
 /* The representation of "frame" */
@@ -59,6 +60,15 @@ struct page_operations {
     bool (*swap_out)(struct page *);
     void (*destroy)(struct page *);
     enum vm_type type;
+};
+
+struct lazy_segment_arg
+{
+    struct file *file;
+    off_t ofs;
+    uint32_t read_bytes;
+    uint32_t zero_bytes;
+    bool writable;
 };
 
 #define swap_in(page, v) (page)->operations->swap_in((page), v)

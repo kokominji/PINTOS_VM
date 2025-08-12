@@ -176,10 +176,10 @@ void disk_print_stats(void) {
    slave, respectively--within the channel numbered CHAN_NO.
 
    Pintos uses disks this way:
-0:0 - boot loader, command line args, and operating system kernel
-0:1 - file system
-1:0 - scratch
-1:1 - swap
+0:0 - boot loader, command line args, and operating system kernel 부팅
+0:1 - file system 0번 디스크의 1번 파티션엔 FS
+1:0 - scratch 1번 디스크의 0번 파티션은 임시
+1:1 - swap 1번 디스크의 1번 파티션은 스왑
 */
 struct disk *disk_get(int chan_no, int dev_no) {
     ASSERT(dev_no == 0 || dev_no == 1);

@@ -872,7 +872,9 @@ static bool lazy_load_segment(struct page *page, void *aux) {
  */
 static bool load_segment(struct file *file, off_t ofs, uint8_t *upage, uint32_t read_bytes,
                          uint32_t zero_bytes, bool writable) {
-    ASSERT((read_bytes + zero_bytes) % PGSIZE == 0);
+
+    //페이지 정렬
+    ASSERT((read_bytes + zero_bytes) % PGSIZE == 0); 
     ASSERT(pg_ofs(upage) == 0);
     ASSERT(ofs % PGSIZE == 0);
 
@@ -880,15 +882,22 @@ static bool load_segment(struct file *file, off_t ofs, uint8_t *upage, uint32_t 
         /* 이 페이지를 어떻게 채울지 계산해야 한다.
          * FILE로부터 PAGE_READ_BYTES만큼 읽고,
          * 나머지 PAGE_ZERO_BYTES는 0으로 채운다. */
-        size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
-        size_t page_zero_bytes = PGSIZE - page_read_bytes;
+        size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE; //read_byte가 PGSIZE보다 작으면 그만큼만 읽고, 아니면 딱 한 페이지를 읽는다.
+        size_t page_zero_bytes = PGSIZE - page_read_bytes; //남는 부분은 0으로 채워 한 페이지를 꽉 채움
 
         /* TODO: lazy_load_segment 함수에 정보를 전달하기 위해 aux를 설정하라. */
-        void *aux = NULL;
+        struct lazy_segment_arg *aux = malloc(sizeof(struct lazy_segment_arg));
+            aux->file = file;
+            aux->ofs = ofs;
+            aux->read_bytes = read_bytes;
+            aux->zero_bytes = zero_bytes;
+            aux->writable = writable;
+
         if (!vm_alloc_page_with_initializer(VM_ANON, upage, writable, lazy_load_segment, aux))
             return false;
 
         /* Advance. */
+        ofs += page_read_bytes;
         read_bytes -= page_read_bytes;
         zero_bytes -= page_zero_bytes;
         upage += PGSIZE;
