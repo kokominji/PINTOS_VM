@@ -51,7 +51,7 @@ type에 따라 초기화 함수를 가져온다.
 생성한 페이지를 SPT에 추가한다.*/
 bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writable,
                                     vm_initializer *init, void *aux) {
-    ASSERT(VM_TYPE(type) != VM_UNINIT) 
+    ASSERT(VM_TYPE(type) != VM_UNINIT);
 
     struct supplemental_page_table *spt = &thread_current()->spt;
 
@@ -69,7 +69,7 @@ bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writabl
         }
 
         //3. 페이지 타입에 따라 초기화 함수 가져옴
-        switch (VM_type(type)){
+        switch (VM_TYPE(type)){
             case VM_ANON:
                 initializer = anon_initializer;
                 break;
@@ -83,7 +83,7 @@ bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writabl
         }
 
     //4. 새로운 초기화되지 않은 페이지 생성
-    unint_new(page, upage, init, type, aux, initializer);
+    uninit_new(page, upage, init, type, aux, initializer);
 
     //5. 페이지의 쓰기 가능 여부 설정
     page -> writable = writable;
