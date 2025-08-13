@@ -852,9 +852,13 @@ static uint64_t *pop_stack(size_t size, struct intr_frame *if_) {
  * upper block. */
 
 static bool lazy_load_segment(struct page *page, void *aux) {
-    /* TODO: 파일에서 세그먼트를 로드해야 한다. */
-    /* TODO: 이 함수는 VA(가상 주소)에서 첫 번째 페이지 폴트가 발생했을 때 호출된다. */
-    /* TODO: VA는 이 함수를 호출할 시점에 유효한 주소이다. */
+    struct lazy_segment_arg *lazy_segment = (struct lazy_segment_arg *)aux;
+    file_seek(lazy_segment->file, lazy_segment->ofs);
+    file_read(lazy_segment->file, page->frame->kva, lazy_segment->ofs);
+    memset(page->frame->kva + lazy_segment->read_bytes, 0, lazy_segment->zero_bytes);
+    free(aux);
+
+    return true;
 }
 
 /* 파일(FILE)의 OFS(offset) 위치부터 시작하여 세그먼트를 
